@@ -8,7 +8,8 @@
     "start": "node app/cli.js",
     "connect": "node app/cli.js connect",
     "connect-url": "node app/cli.js connect-url",
-    "test": "node --test"
+    "dist:windows": "node scripts/build-windows-dist.js",
+    "test": "node --test app/model.test.js app/remote-config.test.js app/socks5-server.test.js app/telegram-connect.test.js"
   },
   "engines": {
     "node": ">=18"

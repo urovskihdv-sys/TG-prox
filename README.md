@@ -66,6 +66,23 @@ This keeps the MVP aligned with the current decision: control plane over HTTPS, 
 - On Windows this uses `cmd.exe /c start` so Telegram Desktop can pick up the registered `tg://` protocol handler.
 - If the launcher or protocol handler is unavailable, TG-prox falls back to printing the deep link for manual use.
 
+## Windows packaging slice
+
+Build a Windows-ready folder layout with:
+
+```bash
+npm run dist:windows
+```
+
+This creates `dist/windows/TG-prox/` with:
+
+- `TG-prox.cmd` as the primary Windows entrypoint for `connect`
+- `TG-prox-connect-url.cmd` for printing the deep link
+- `TG-prox.ps1` for PowerShell usage
+- copied `app/` and `config/` runtime assets
+
+This is still a Node-based MVP package, not a standalone `.exe` yet.
+
 ## Test
 
 ```bash
