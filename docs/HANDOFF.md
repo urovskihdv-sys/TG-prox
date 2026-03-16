@@ -46,8 +46,12 @@ Completed in this step:
 41. Verified relay mode end-to-end with tests covering `client -> relay server -> target` and unauthorized rejection.
 42. Added deploy assets for a known-good real-server path on this host: `systemd` unit plus env-file template for `relay.unitops.pro:8443`.
 43. Deployed the relay live on this host at `https://relay.unitops.pro:8443`, issued a Let's Encrypt certificate, opened `8443/tcp`, and verified `/healthz`.
+44. Added `GET /config.json` on the live relay server so packaged clients can bootstrap relay settings from the server.
+45. Updated both macOS and Windows packaged launchers to default `TGPROX_REMOTE_CONFIG_URL` to `https://relay.unitops.pro:8443/config.json`.
+46. Reduced future reinstall churn: after the next installer refresh, relay endpoint/token changes can be served centrally instead of passed manually through Terminal.
+47. Restarted the live relay service on this host and verified that `https://relay.unitops.pro:8443/config.json` now returns the packaged client bootstrap config.
 
 Next implementation slice:
-1. Switch the desktop client path to the live relay endpoint and validate Telegram through the real server.
-2. Validate packaged Windows/macOS apps in relay mode against the real server and confirm they keep working without repeated Telegram prompts.
-3. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.
+1. Rebuild Windows/macOS installers once more so both platforms pick up the packaged bootstrap URL, then validate them against the live relay without manual env overrides.
+2. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.
+3. Replace the shared static relay token with a more controlled bootstrap/auth story once the end-to-end user path is stable.

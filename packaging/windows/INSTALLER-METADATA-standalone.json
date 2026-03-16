@@ -58,6 +58,7 @@
     "The installer registers a per-user Windows Run entry so TG-prox starts again after login.",
     "The post-install launch runs in background and should leave the local SOCKS5 agent active without a visible console window.",
     "Control plane is HTTPS remote config only.",
-    "Data plane can run either direct or through the HTTPS relay transport, depending on config."
+    "Data plane can run either direct or through the HTTPS relay transport, depending on config.",
+    "The packaged launchers bootstrap remote config from https://relay.unitops.pro:8443/config.json unless overridden."
   ]
 }

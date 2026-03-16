@@ -39,6 +39,7 @@
   ],
   "notes": [
     "Control plane is HTTPS remote config only.",
-    "Data plane can run either direct or through the HTTPS relay transport, depending on config."
+    "Data plane can run either direct or through the HTTPS relay transport, depending on config.",
+    "The packaged launchers bootstrap remote config from https://relay.unitops.pro:8443/config.json unless overridden."
   ]
 }

@@ -12,6 +12,7 @@ export async function createRelayServer({
   tlsKeyPath,
   tlsCertPath,
   sharedToken,
+  publicRelayURL = null,
   outboundConnectTimeoutMs = 10000,
   logger
 }) {
@@ -24,6 +25,21 @@ export async function createRelayServer({
     if (request.method === "GET" && request.url === "/healthz") {
       response.writeHead(200, { "content-type": "application/json" });
       response.end('{"status":"ok"}');
+      return;
+    }
+
+    if (request.method === "GET" && request.url === "/config.json") {
+      const configBody = JSON.stringify(
+        buildClientRemoteConfig({
+          request,
+          sharedToken,
+          publicRelayURL
+        }),
+        null,
+        2
+      );
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(`${configBody}\n`);
       return;
     }
 
@@ -196,6 +212,44 @@ function connectSocket({ host, port, timeoutMs }) {
   });
 }
 
+function buildClientRemoteConfig({ request, sharedToken, publicRelayURL }) {
+  return {
+    schemaVersion: 1,
+    version: "relay-live",
+    updatedAt: new Date().toISOString(),
+    proxy: {
+      listenHost: "127.0.0.1",
+      listenPort: 9150,
+      handshakeTimeoutMs: 10000
+    },
+    telegram: {
+      socksHost: "127.0.0.1",
+      socksPort: 9150
+    },
+    transport: {
+      mode: "relay",
+      connectTimeoutMs: 10000,
+      relay: {
+        serverURL: publicRelayURL || derivePublicRelayURL(request),
+        authToken: sharedToken,
+        caCertPath: null
+      }
+    },
+    controlPlane: {
+      refreshIntervalMs: 300000
+    }
+  };
+}
+
+function derivePublicRelayURL(request) {
+  const host = request.headers.host;
+  if (!host) {
+    throw new Error("cannot derive public relay URL without Host header");
+  }
+
+  return `https://${host}`;
+}
+
 function listen(server, host, port) {
   return new Promise((resolve, reject) => {
     server.once("error", reject);
@@ -231,6 +285,7 @@ function buildServerConfig(env = process.env) {
     tlsKeyPath: env.TGPROX_RELAY_TLS_KEY_PATH || "",
     tlsCertPath: env.TGPROX_RELAY_TLS_CERT_PATH || "",
     sharedToken: env.TGPROX_RELAY_SHARED_TOKEN || "",
+    publicRelayURL: env.TGPROX_RELAY_PUBLIC_URL || "",
     outboundConnectTimeoutMs: Number.parseInt(
       env.TGPROX_RELAY_CONNECT_TIMEOUT_MS || "10000",
       10

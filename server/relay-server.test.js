@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import https from "node:https";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -99,6 +100,41 @@ test("relay transport rejects unauthorized connections", async () => {
   await relayServer.stop();
 });
 
+test("relay server exposes remote config for packaged clients", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "tg-prox-relay-"));
+  const tlsKeyPath = path.join(tempDir, "relay.key");
+  const tlsCertPath = path.join(tempDir, "relay.crt");
+  await fs.writeFile(tlsKeyPath, TEST_TLS_KEY, "utf8");
+  await fs.writeFile(tlsCertPath, TEST_TLS_CERT, "utf8");
+
+  const relayServer = await createRelayServer({
+    listenHost: "localhost",
+    listenPort: 0,
+    tlsKeyPath,
+    tlsCertPath,
+    sharedToken: "relay-secret",
+    logger: createSilentLogger()
+  });
+  await relayServer.start();
+
+  const relayAddress = relayServer.address();
+  const config = await fetchJSON({
+    hostname: "localhost",
+    port: relayAddress.port,
+    path: "/config.json",
+    ca: TEST_TLS_CERT,
+    headers: {
+      Host: `relay.test:${relayAddress.port}`
+    }
+  });
+
+  assert.equal(config.transport.mode, "relay");
+  assert.equal(config.transport.relay.serverURL, `https://relay.test:${relayAddress.port}`);
+  assert.equal(config.transport.relay.authToken, "relay-secret");
+
+  await relayServer.stop();
+});
+
 function createSilentLogger() {
   return {
     info() {},
@@ -164,6 +200,41 @@ function readBytes(socket, size) {
     socket.on("data", onData);
     socket.once("close", onClose);
     socket.once("error", onError);
+  });
+}
+
+function fetchJSON({ hostname, port, path, ca, headers = {} }) {
+  return new Promise((resolve, reject) => {
+    const request = https.request(
+      {
+        hostname,
+        port,
+        path,
+        method: "GET",
+        ca,
+        rejectUnauthorized: true,
+        servername: "localhost",
+        headers
+      },
+      (response) => {
+        let body = "";
+        response.setEncoding("utf8");
+        response.on("data", (chunk) => {
+          body += chunk;
+        });
+        response.on("end", () => {
+          if (response.statusCode !== 200) {
+            reject(new Error(`unexpected status ${response.statusCode}`));
+            return;
+          }
+
+          resolve(JSON.parse(body));
+        });
+      }
+    );
+
+    request.once("error", reject);
+    request.end();
   });
 }
 

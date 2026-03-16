@@ -29,6 +29,7 @@
     "The pkg installs TG-prox.app and a launchd LaunchAgent for background autostart.",
     "The installer attempts one immediate app launch so Telegram can pick up the local proxy without Terminal.",
     "Data plane can run either direct or through the HTTPS relay transport, depending on config.",
+    "The packaged app bootstraps remote config from https://relay.unitops.pro:8443/config.json unless overridden.",
     "macOS remains best-effort beta."
   ]
 }

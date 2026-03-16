@@ -58,6 +58,12 @@ Optional environment variables:
 
 Without `TGPROX_REMOTE_CONFIG_URL`, the app skips the remote fetch and uses `cache -> default` fallback locally.
 
+Packaged macOS and Windows launchers now default `TGPROX_REMOTE_CONFIG_URL` to:
+
+- `https://relay.unitops.pro:8443/config.json`
+
+That means one more reinstall is needed to pick up this bootstrap behavior, but future transport changes can then be served centrally from the relay host.
+
 ## Current SOCKS5 scope
 
 - SOCKS5 version `5`
@@ -104,6 +110,7 @@ TGPROX_RELAY_CA_CERT_PATH=/path/to/relay-ca.pem
 ```
 
 The relay server exposes `GET /healthz` over HTTPS for a simple readiness check.
+It also exposes `GET /config.json` for packaged clients to fetch the current relay config.
 
 ## Real Server Recipe
 
