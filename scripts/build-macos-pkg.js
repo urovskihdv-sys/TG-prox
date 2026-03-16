@@ -3,6 +3,7 @@ import {
   BuildBlocker,
   describeCurrentHost,
   distRoot,
+  ensureDir,
   execFileAsync,
   findExecutable,
   isMainModule,
@@ -42,6 +43,7 @@ export async function buildMacOSPkgInstaller() {
   const packageJson = await readPackageJson();
   const appBundlePath = await buildMacOSAppDist();
   const installersRoot = path.join(distRoot, "installers");
+  await ensureDir(installersRoot);
   const componentPkgPath = path.join(installersRoot, `TG-prox-macos-component-${packageJson.version}.pkg`);
   const finalPkgPath = path.join(installersRoot, `TG-prox-macos-installer-${packageJson.version}.pkg`);
 
