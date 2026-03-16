@@ -13,9 +13,10 @@ export async function createRelayServer({
   tlsCertPath,
   sharedToken,
   publicRelayURL = null,
-  outboundConnectTimeoutMs = 10000,
+  outboundConnectTimeoutMs = 4000,
   logger
 }) {
+  const activeSockets = new Set();
   const [key, cert] = await Promise.all([
     fs.readFile(tlsKeyPath, "utf8"),
     fs.readFile(tlsCertPath, "utf8")
@@ -48,12 +49,14 @@ export async function createRelayServer({
   });
 
   server.on("connect", (request, clientSocket, head) => {
+    trackSocket(activeSockets, clientSocket);
     handleTunnel({
       request,
       clientSocket,
       head,
       sharedToken,
       outboundConnectTimeoutMs,
+      activeSockets,
       logger
     }).catch((error) => {
       logger.warn("Relay CONNECT failed", {
@@ -79,6 +82,7 @@ export async function createRelayServer({
       return address;
     },
     async stop() {
+      destroyTrackedSockets(activeSockets);
       await closeServer(server);
       logger.info("Relay server stopped", {
         listenHost,
@@ -97,6 +101,7 @@ async function handleTunnel({
   head,
   sharedToken,
   outboundConnectTimeoutMs,
+  activeSockets,
   logger
 }) {
   const requestId = request.headers["x-tgprox-request-id"] || "unknown";
@@ -135,13 +140,41 @@ async function handleTunnel({
     throw error;
   }
 
+  clientSocket.setNoDelay(true);
+  clientSocket.setKeepAlive(true, 30000);
+  trackSocket(activeSockets, outboundSocket);
+  outboundSocket.setNoDelay(true);
+  outboundSocket.setKeepAlive(true, 30000);
+
+  logger.info("Relay outbound connected", {
+    requestId,
+    targetHost: target.host,
+    targetPort: target.port
+  });
+
   clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
   if (head?.length) {
     outboundSocket.write(head);
   }
 
-  clientSocket.once("error", () => outboundSocket.destroy());
-  outboundSocket.once("error", () => clientSocket.destroy());
+  clientSocket.once("error", (error) => {
+    logger.warn("Relay client socket closed with error", {
+      requestId,
+      targetHost: target.host,
+      targetPort: target.port,
+      error: error.message
+    });
+    outboundSocket.destroy();
+  });
+  outboundSocket.once("error", (error) => {
+    logger.warn("Relay outbound socket closed with error", {
+      requestId,
+      targetHost: target.host,
+      targetPort: target.port,
+      error: error.message
+    });
+    clientSocket.destroy();
+  });
   clientSocket.once("close", () => outboundSocket.destroy());
   outboundSocket.once("close", () => clientSocket.destroy());
 
@@ -201,8 +234,9 @@ function connectSocket({ host, port, timeoutMs }) {
     const onTimeout = () => {
       const error = new Error(`relay outbound timeout after ${timeoutMs}ms`);
       error.code = "ETIMEDOUT";
-      socket.destroy(error);
+      socket.once("error", () => {});
       finalize(reject, error);
+      socket.destroy(error);
     };
 
     socket.once("connect", onConnect);
@@ -210,6 +244,20 @@ function connectSocket({ host, port, timeoutMs }) {
     socket.once("timeout", onTimeout);
     socket.setTimeout(timeoutMs);
   });
+}
+
+function trackSocket(activeSockets, socket) {
+  activeSockets.add(socket);
+  socket.once("close", () => {
+    activeSockets.delete(socket);
+  });
+}
+
+function destroyTrackedSockets(activeSockets) {
+  for (const socket of activeSockets) {
+    socket.destroy();
+  }
+  activeSockets.clear();
 }
 
 function buildClientRemoteConfig({ request, sharedToken, publicRelayURL }) {
@@ -228,7 +276,7 @@ function buildClientRemoteConfig({ request, sharedToken, publicRelayURL }) {
     },
     transport: {
       mode: "relay",
-      connectTimeoutMs: 10000,
+      connectTimeoutMs: 4000,
       relay: {
         serverURL: publicRelayURL || derivePublicRelayURL(request),
         authToken: sharedToken,
@@ -286,10 +334,7 @@ function buildServerConfig(env = process.env) {
     tlsCertPath: env.TGPROX_RELAY_TLS_CERT_PATH || "",
     sharedToken: env.TGPROX_RELAY_SHARED_TOKEN || "",
     publicRelayURL: env.TGPROX_RELAY_PUBLIC_URL || "",
-    outboundConnectTimeoutMs: Number.parseInt(
-      env.TGPROX_RELAY_CONNECT_TIMEOUT_MS || "10000",
-      10
-    )
+    outboundConnectTimeoutMs: Number.parseInt(env.TGPROX_RELAY_CONNECT_TIMEOUT_MS || "4000", 10)
   };
 }
 

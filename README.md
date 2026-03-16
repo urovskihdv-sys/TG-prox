@@ -91,7 +91,7 @@ Optional relay server environment variables:
 
 - `TGPROX_RELAY_LISTEN_HOST=0.0.0.0`
 - `TGPROX_RELAY_LISTEN_PORT=8443`
-- `TGPROX_RELAY_CONNECT_TIMEOUT_MS=10000`
+- `TGPROX_RELAY_CONNECT_TIMEOUT_MS=4000`
 - `TGPROX_RELAY_LOG_FILE=/var/log/tg-prox-relay.log`
 
 Client-side relay mode:

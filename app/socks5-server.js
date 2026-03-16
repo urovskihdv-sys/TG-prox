@@ -63,6 +63,7 @@ async function handleClient({ clientSocket, handshakeTimeoutMs, connectTimeoutMs
   const requestId = crypto.randomUUID();
   clientSocket.setNoDelay(true);
   clientSocket.setTimeout(handshakeTimeoutMs);
+  let wroteReply = false;
 
   logger.info("SOCKS5 client connected", {
     requestId,
@@ -93,15 +94,25 @@ async function handleClient({ clientSocket, handshakeTimeoutMs, connectTimeoutMs
 
     if (command !== CMD_CONNECT) {
       await writeSocksReply(clientSocket, 0x07);
+      wroteReply = true;
       throw new Error(`unsupported SOCKS5 command ${command}`);
     }
 
-    const outboundSocket = await transport.connect({
-      host: targetHost,
-      port: targetPort,
-      timeoutMs: connectTimeoutMs,
-      requestId
-    });
+    let outboundSocket;
+    try {
+      outboundSocket = await transport.connect({
+        host: targetHost,
+        port: targetPort,
+        timeoutMs: connectTimeoutMs,
+        requestId
+      });
+    } catch (error) {
+      if (!clientSocket.destroyed) {
+        await writeSocksReply(clientSocket, mapOutboundErrorToReplyCode(error));
+        wroteReply = true;
+      }
+      throw error;
+    }
 
     outboundSocket.setNoDelay(true);
     clientSocket.setTimeout(0);
@@ -113,6 +124,7 @@ async function handleClient({ clientSocket, handshakeTimeoutMs, connectTimeoutMs
     });
 
     await writeSocksReply(clientSocket, 0x00, outboundSocket.localAddress, outboundSocket.localPort);
+    wroteReply = true;
     startRelay({
       clientSocket,
       outboundSocket,
@@ -122,8 +134,10 @@ async function handleClient({ clientSocket, handshakeTimeoutMs, connectTimeoutMs
       targetPort
     });
   } catch (error) {
-    if (!clientSocket.destroyed) {
+    if (!clientSocket.destroyed && !wroteReply) {
       clientSocket.destroy();
+    } else if (!clientSocket.destroyed) {
+      clientSocket.end();
     }
     throw error;
   }
@@ -280,6 +294,26 @@ function ensureSocksVersion(version) {
   if (version !== SOCKS_VERSION) {
     throw new Error(`unsupported SOCKS version ${version}`);
   }
+}
+
+function mapOutboundErrorToReplyCode(error) {
+  if (!error || typeof error !== "object") {
+    return 0x01;
+  }
+
+  if (error.code === "ETIMEDOUT") {
+    return 0x06;
+  }
+
+  if (error.code === "ECONNREFUSED") {
+    return 0x05;
+  }
+
+  if (error.code === "EHOSTUNREACH" || error.code === "ENETUNREACH") {
+    return 0x04;
+  }
+
+  return 0x01;
 }
 
 function listen(server, host, port) {

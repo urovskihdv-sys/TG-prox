@@ -44,8 +44,9 @@ function connectSocket({ host, port, timeoutMs }) {
     const onTimeout = () => {
       const error = new Error(`connect timeout after ${timeoutMs}ms`);
       error.code = "ETIMEDOUT";
-      socket.destroy(error);
+      socket.once("error", () => {});
       finalize(reject, error);
+      socket.destroy(error);
     };
 
     socket.once("connect", onConnect);

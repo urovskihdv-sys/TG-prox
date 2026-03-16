@@ -50,8 +50,11 @@ Completed in this step:
 45. Updated both macOS and Windows packaged launchers to default `TGPROX_REMOTE_CONFIG_URL` to `https://relay.unitops.pro:8443/config.json`.
 46. Reduced future reinstall churn: after the next installer refresh, relay endpoint/token changes can be served centrally instead of passed manually through Terminal.
 47. Restarted the live relay service on this host and verified that `https://relay.unitops.pro:8443/config.json` now returns the packaged client bootstrap config.
+48. Found and fixed a relay stability bug where outbound timeouts could crash the whole relay process with an unhandled socket error.
+49. Updated the local SOCKS5 adapter to return proper SOCKS failure replies on outbound connect errors instead of silently resetting the client socket.
+50. Reduced the relay outbound connect timeout to 4s so failed Telegram probe connections do not stall the user path for 10s.
 
 Next implementation slice:
 1. Rebuild Windows/macOS installers once more so both platforms pick up the packaged bootstrap URL, then validate them against the live relay without manual env overrides.
-2. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.
-3. Replace the shared static relay token with a more controlled bootstrap/auth story once the end-to-end user path is stable.
+2. Validate the new relay stability fix against the live Mac install and confirm message send/receive no longer stalls intermittently.
+3. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.

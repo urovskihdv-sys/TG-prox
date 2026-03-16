@@ -116,6 +116,49 @@ test("SOCKS5 server fails to start on an occupied port", async () => {
   await closeServer(occupiedServer);
 });
 
+test("SOCKS5 server returns failure reply when outbound connect fails", async () => {
+  const socksServer = createLocalSocks5Server({
+    listenHost: "127.0.0.1",
+    listenPort: 0,
+    handshakeTimeoutMs: 1000,
+    connectTimeoutMs: 1000,
+    logger: createSilentLogger(),
+    transport: {
+      mode: "relay",
+      async connect() {
+        const error = new Error("relay connect refused");
+        error.code = "ECONNREFUSED";
+        throw error;
+      }
+    }
+  });
+
+  await socksServer.start();
+
+  const proxyAddress = socksServer.address();
+  const client = net.createConnection({
+    host: proxyAddress.address,
+    port: proxyAddress.port
+  });
+
+  await once(client, "connect");
+  client.write(Buffer.from([0x05, 0x01, 0x00]));
+  await readBytes(client, 2);
+
+  const connectRequest = Buffer.concat([
+    Buffer.from([0x05, 0x01, 0x00, 0x01]),
+    Buffer.from([127, 0, 0, 1]),
+    bufferFromPort(443)
+  ]);
+  client.write(connectRequest);
+
+  const reply = await readBytes(client, 10);
+  assert.equal(reply[1], 0x05);
+
+  client.destroy();
+  await socksServer.stop();
+});
+
 function createSilentLogger() {
   return {
     info() {},
