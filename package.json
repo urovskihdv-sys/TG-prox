@@ -6,6 +6,8 @@
   "description": "Windows-first MVP bootstrap for a local Telegram proxy agent.",
   "scripts": {
     "start": "node app/cli.js",
+    "connect": "node app/cli.js connect",
+    "connect-url": "node app/cli.js connect-url",
     "test": "node --test"
   },
   "engines": {

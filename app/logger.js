@@ -3,7 +3,7 @@ import path from "node:path";
 
 const REDACTED_KEYS = new Set(["payload", "content", "body", "messageContents"]);
 
-export function createLogger({ appName, logFilePath, stream = process.stdout } = {}) {
+export function createLogger({ appName, logFilePath, stream = process.stderr } = {}) {
   fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
 
   return {

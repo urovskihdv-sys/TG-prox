@@ -10,7 +10,7 @@ The repository now contains a runnable local-agent bootstrap focused on the cont
 - remote config loader over HTTPS
 - cache fallback on fetch failure
 - bundled default fallback when cache is missing
-- file + stdout logging without payload logging
+- file + stderr logging without payload logging
 - local SOCKS5 adapter with `CONNECT` support and direct outbound transport
 
 This is intentionally a vertical slice for the MVP foundation. No relay/data-plane is routed through our server in this phase.
@@ -27,6 +27,18 @@ npm start
 ```
 
 This starts a long-running local agent and binds the SOCKS5 listener from the resolved config. Current default is `127.0.0.1:9150`.
+
+To start the agent and trigger a Telegram Desktop connect action:
+
+```bash
+npm run connect
+```
+
+To print the deep link without opening Telegram:
+
+```bash
+npm run connect-url
+```
 
 Optional environment variables:
 
@@ -46,6 +58,13 @@ Without `TGPROX_REMOTE_CONFIG_URL`, the app skips the remote fetch and uses `cac
 - transport mode: direct outbound TCP only
 
 This keeps the MVP aligned with the current decision: control plane over HTTPS, no relay/data-plane through our server.
+
+## Telegram connect flow
+
+- `connect-url` resolves the active config and prints a `tg://socks?...` deep link.
+- `connect` starts the local agent and tries to open that deep link with the platform launcher.
+- On Windows this uses `cmd.exe /c start` so Telegram Desktop can pick up the registered `tg://` protocol handler.
+- If the launcher or protocol handler is unavailable, TG-prox falls back to printing the deep link for manual use.
 
 ## Test
 
