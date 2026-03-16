@@ -21,11 +21,24 @@ export function normalizeRemoteConfig(rawConfig) {
     updatedAt: normalizeTimestamp(rawConfig.updatedAt),
     proxy: {
       listenHost: proxyHost,
-      listenPort: proxyPort
+      listenPort: proxyPort,
+      handshakeTimeoutMs: normalizePositiveInteger(
+        rawConfig.proxy?.handshakeTimeoutMs,
+        10000,
+        "proxy.handshakeTimeoutMs"
+      )
     },
     telegram: {
       socksHost: normalizeNonEmptyString(rawConfig.telegram?.socksHost, proxyHost),
       socksPort: normalizePort(rawConfig.telegram?.socksPort, proxyPort, "telegram.socksPort")
+    },
+    transport: {
+      mode: normalizeTransportMode(rawConfig.transport?.mode),
+      connectTimeoutMs: normalizePositiveInteger(
+        rawConfig.transport?.connectTimeoutMs,
+        10000,
+        "transport.connectTimeoutMs"
+      )
     },
     controlPlane: {
       refreshIntervalMs: normalizePositiveInteger(
@@ -108,4 +121,16 @@ function normalizeVersion(value) {
 
 function isLoopback(hostname) {
   return LOOPBACK_HOSTS.has(hostname);
+}
+
+function normalizeTransportMode(value) {
+  if (value === undefined || value === null || value === "") {
+    return "direct";
+  }
+
+  if (value !== "direct") {
+    throw new ConfigValidationError("transport.mode must be 'direct'");
+  }
+
+  return value;
 }

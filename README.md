@@ -11,6 +11,7 @@ The repository now contains a runnable local-agent bootstrap focused on the cont
 - cache fallback on fetch failure
 - bundled default fallback when cache is missing
 - file + stdout logging without payload logging
+- local SOCKS5 adapter with `CONNECT` support and direct outbound transport
 
 This is intentionally a vertical slice for the MVP foundation. No relay/data-plane is routed through our server in this phase.
 
@@ -25,6 +26,8 @@ This is intentionally a vertical slice for the MVP foundation. No relay/data-pla
 npm start
 ```
 
+This starts a long-running local agent and binds the SOCKS5 listener from the resolved config. Current default is `127.0.0.1:9150`.
+
 Optional environment variables:
 
 - `TGPROX_REMOTE_CONFIG_URL=https://control.example.com/config.json`
@@ -33,6 +36,16 @@ Optional environment variables:
 - `TGPROX_DEFAULT_CONFIG_PATH=/custom/default.remote-config.json`
 
 Without `TGPROX_REMOTE_CONFIG_URL`, the app skips the remote fetch and uses `cache -> default` fallback locally.
+
+## Current SOCKS5 scope
+
+- SOCKS5 version `5`
+- authentication: `NO AUTH`
+- command support: `CONNECT`
+- address support: IPv4, domain name, IPv6
+- transport mode: direct outbound TCP only
+
+This keeps the MVP aligned with the current decision: control plane over HTTPS, no relay/data-plane through our server.
 
 ## Test
 

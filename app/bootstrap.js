@@ -2,6 +2,8 @@ import fs from "node:fs/promises";
 import { buildAppConfig } from "./config.js";
 import { createLogger } from "./logger.js";
 import { createRemoteConfigLoader } from "./remote-config.js";
+import { createLocalSocks5Server } from "./socks5-server.js";
+import { createDirectTransport } from "./transport/direct.js";
 
 export async function runApp({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
   const appConfig = buildAppConfig(env);
@@ -39,9 +41,25 @@ export async function runApp({ env = process.env, fetchImpl = globalThis.fetch }
     telegramEndpoint: `${resolvedConfig.config.telegram.socksHost}:${resolvedConfig.config.telegram.socksPort}`
   });
 
+  const transport = createDirectTransport({ logger });
+  const socksServer = createLocalSocks5Server({
+    listenHost: resolvedConfig.config.proxy.listenHost,
+    listenPort: resolvedConfig.config.proxy.listenPort,
+    handshakeTimeoutMs: resolvedConfig.config.proxy.handshakeTimeoutMs,
+    connectTimeoutMs: resolvedConfig.config.transport.connectTimeoutMs,
+    logger,
+    transport
+  });
+
+  await socksServer.start();
+
   return {
     appConfig,
     logger,
-    remoteConfig: resolvedConfig
+    remoteConfig: resolvedConfig,
+    socksServer,
+    async stop() {
+      await socksServer.stop();
+    }
   };
 }
