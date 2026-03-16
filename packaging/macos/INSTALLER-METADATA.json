@@ -1,0 +1,29 @@
+{
+  "appId": "TG-prox",
+  "displayName": "TG-prox",
+  "installScope": "per-user",
+  "installDir": "~/Applications/TG-prox",
+  "runtimeDataDir": "~/Library/Application Support/TG-prox",
+  "primaryEntrypoint": "TG-prox.command",
+  "entrypoints": [
+    {
+      "id": "connect",
+      "file": "TG-prox.command",
+      "description": "Starts the local SOCKS5 agent and triggers the Telegram connect flow."
+    },
+    {
+      "id": "connect-url",
+      "file": "TG-prox-connect-url.command",
+      "description": "Prints the tg://socks deep link without opening Telegram."
+    }
+  ],
+  "prerequisites": [
+    "Node.js 18 or newer on PATH",
+    "Telegram Desktop installed with tg:// protocol handler registered"
+  ],
+  "notes": [
+    "Control plane is HTTPS remote config only.",
+    "Data plane is direct outbound TCP in the current MVP.",
+    "macOS remains best-effort beta."
+  ]
+}

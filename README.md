@@ -85,6 +85,27 @@ This creates `dist/windows/TG-prox/` with:
 
 The installer metadata currently targets a per-user Windows install in `%LocalAppData%\\Programs\\TG-prox`. This is still a Node-based MVP package, not a standalone `.exe` yet.
 
+For the macOS beta payload layout:
+
+```bash
+npm run dist:macos
+```
+
+## Installer outputs
+
+Build both final installer files with:
+
+```bash
+npm run dist:installers
+```
+
+This produces:
+
+- `dist/installers/TG-prox-windows-installer-<version>.ps1`
+- `dist/installers/TG-prox-macos-installer-<version>.command`
+
+These are installer scripts with embedded payloads. Windows is the primary target. macOS remains best-effort beta.
+
 ## Test
 
 ```bash

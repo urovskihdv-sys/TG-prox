@@ -8,7 +8,9 @@
     "start": "node app/cli.js",
     "connect": "node app/cli.js connect",
     "connect-url": "node app/cli.js connect-url",
+    "dist:macos": "node scripts/build-macos-dist.js",
     "dist:windows": "node scripts/build-windows-dist.js",
+    "dist:installers": "node scripts/build-installers.js",
     "test": "node --test app/model.test.js app/remote-config.test.js app/socks5-server.test.js app/telegram-connect.test.js"
   },
   "engines": {
