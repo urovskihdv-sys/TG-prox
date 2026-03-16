@@ -12,6 +12,7 @@ The repository now contains a runnable local-agent bootstrap focused on the cont
 - bundled default fallback when cache is missing
 - file + stderr logging without payload logging
 - local SOCKS5 adapter with `CONNECT` support and direct outbound transport
+- macOS `.pkg` background install path via `LaunchAgent`
 
 This is intentionally a vertical slice for the MVP foundation. No relay/data-plane is routed through our server in this phase.
 
@@ -147,6 +148,25 @@ If the repo is on GitHub, the lowest-manual-work path is:
    - `tg-prox-macos-installer`
 
 The workflow file is [release-installers.yml](/opt/TG-prox/.github/workflows/release-installers.yml). It uses GitHub-hosted Windows and macOS runners, runs tests first, prepares the bundled Node runtime on the runner, then builds the release installers.
+
+## macOS package behavior
+
+The macOS release package now installs:
+
+- `/Applications/TG-prox.app`
+- `/Library/LaunchAgents/local.tgprox.agent.plist`
+
+The packaged postinstall path:
+
+- bootstraps the `launchd` agent so the local SOCKS5 listener survives Terminal closure
+- keeps the listener running again after user login
+- opens `TG-prox.app` once so Telegram can receive the `tg://socks` connect action without a manual Terminal step
+
+Current limits:
+
+- the package is still unsigned and not notarized, so Gatekeeper may require `Open Anyway`
+- macOS remains best-effort beta
+- Windows installer packaging exists, but the same “install once and always-on background agent” finish is still a follow-up on Windows
 
 ## Standalone Packaging Paths
 

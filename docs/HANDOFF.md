@@ -1,6 +1,6 @@
 # Handoff
 
-Status: iteration 7 honest release-packaging boundary complete
+Status: iteration 8 macOS background install path complete
 
 Completed in this step:
 1. Chosen runtime: Node.js local-agent skeleton with Windows-first path layout.
@@ -26,8 +26,15 @@ Completed in this step:
 21. Moved script installers to `dist/fallback-installers/` and marked them as fallback/dev-only.
 22. Removed overstated installer wording from dev payload metadata in `dist:windows` and `dist:macos`.
 23. Added a GitHub Actions workflow that can build Windows `.exe` and macOS `.pkg` on hosted runners with minimal manual setup.
+24. Fixed the macOS hosted-runner packaging path so `.pkg` artifacts are produced successfully on GitHub Actions.
+25. Validated the hosted workflow end-to-end on the real GitHub repository and downloaded both Windows `.exe` and macOS `.pkg` artifacts.
+26. Confirmed the macOS `.pkg` installs, but also confirmed the first package version only worked while TG-prox stayed open in Terminal.
+27. Added a macOS `launchd` LaunchAgent packaging path so the local SOCKS5 listener runs in background after install and after login.
+28. Updated macOS postinstall to bootstrap the LaunchAgent immediately and trigger one app launch for Telegram proxy registration without Terminal.
+29. Updated `connect` mode to reuse an already-running local SOCKS5 listener and exit cleanly instead of leaving an extra hanging process.
+30. Added runtime reachability tests for the listener probe used by the connect-flow reuse path.
 
 Next implementation slice:
-1. Validate the hosted-runner workflow on the real GitHub repository and confirm `.exe` / `.pkg` artifacts download cleanly.
-2. Tighten the Windows standalone `.exe` path if Inno Setup installation on hosted runners needs adjustment.
-3. Add branded installer assets once the final `.exe/.pkg` workflow is confirmed stable.
+1. Add Windows post-install background/autostart so the `.exe` installer reaches the same “install once, no Terminal/manual keepalive” bar.
+2. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.
+3. Add signing/notarization for macOS and code signing for Windows so installers open cleanly on end-user machines.

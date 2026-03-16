@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+
+LABEL="local.tgprox.agent"
+PLIST_PATH="/Library/LaunchAgents/${LABEL}.plist"
+APP_PATH="/Applications/TG-prox.app"
+CONSOLE_USER="$(stat -f '%Su' /dev/console)"
+
+if [[ ! -f "$PLIST_PATH" ]]; then
+  exit 0
+fi
+
+if [[ -z "$CONSOLE_USER" || "$CONSOLE_USER" == "root" ]]; then
+  exit 0
+fi
+
+USER_ID="$(id -u "$CONSOLE_USER")"
+
+launchctl bootout "gui/${USER_ID}" "$PLIST_PATH" >/dev/null 2>&1 || true
+launchctl bootstrap "gui/${USER_ID}" "$PLIST_PATH"
+launchctl enable "gui/${USER_ID}/${LABEL}" >/dev/null 2>&1 || true
+launchctl kickstart -k "gui/${USER_ID}/${LABEL}" >/dev/null 2>&1 || true
+launchctl asuser "$USER_ID" open -a "$APP_PATH" >/dev/null 2>&1 || true

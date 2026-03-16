@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { runApp } from "./bootstrap.js";
+import { isTcpEndpointListening } from "./runtime.js";
 import { buildTelegramSocksURL, launchTelegramConnect } from "./telegram-connect.js";
 
 try {
@@ -9,20 +10,25 @@ try {
     const result = await runApp({ startServer: false });
     process.stdout.write(`${buildTelegramSocksURL(result.remoteConfig.config.telegram)}\n`);
   } else if (command === "connect") {
-    const result = await runApp();
-    announceReady(result);
+    const connectSession = await runConnectMode();
+    announceReady(connectSession.result);
 
-    const connectURL = buildTelegramSocksURL(result.remoteConfig.config.telegram);
+    const connectURL = buildTelegramSocksURL(connectSession.result.remoteConfig.config.telegram);
     const launchResult = await launchTelegramConnect({
       connectURL,
-      logger: result.logger
+      logger: connectSession.result.logger
     });
 
     if (!launchResult.opened) {
       process.stdout.write(`Telegram connect URL: ${connectURL}\n`);
     }
 
-    await waitForSignals(result);
+    if (!connectSession.keepProcessAlive) {
+      await connectSession.result.stop();
+      process.exit(0);
+    }
+
+    await waitForSignals(connectSession.result);
   } else if (command === "serve") {
     const result = await runApp();
     announceReady(result);
@@ -34,6 +40,31 @@ try {
 } catch (error) {
   process.stderr.write(`TG-prox failed to start: ${error.message}\n`);
   process.exitCode = 1;
+}
+
+async function runConnectMode() {
+  const probe = await runApp({ startServer: false });
+  const proxyConfig = probe.remoteConfig.config.proxy;
+  const existingServer = await isTcpEndpointListening({
+    host: proxyConfig.listenHost,
+    port: proxyConfig.listenPort
+  });
+
+  if (existingServer) {
+    probe.logger.info("Reusing existing local SOCKS5 adapter", {
+      proxyEndpoint: `${proxyConfig.listenHost}:${proxyConfig.listenPort}`
+    });
+    return {
+      result: probe,
+      keepProcessAlive: false
+    };
+  }
+
+  await probe.stop();
+  return {
+    result: await runApp(),
+    keepProcessAlive: true
+  };
 }
 
 function announceReady(result) {

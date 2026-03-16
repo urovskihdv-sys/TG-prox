@@ -16,7 +16,7 @@
     "dist:windows:standalone": "node scripts/build-windows-standalone-dist.js",
     "dist:windows:exe": "node scripts/build-windows-exe-installer.js",
     "dist:installers": "node scripts/build-installers.js",
-    "test": "node --test app/model.test.js app/remote-config.test.js app/socks5-server.test.js app/telegram-connect.test.js"
+    "test": "node --test app/model.test.js app/remote-config.test.js app/runtime.test.js app/socks5-server.test.js app/telegram-connect.test.js"
   },
   "engines": {
     "node": ">=18"
