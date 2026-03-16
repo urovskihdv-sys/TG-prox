@@ -79,9 +79,11 @@ This creates `dist/windows/TG-prox/` with:
 - `TG-prox.cmd` as the primary Windows entrypoint for `connect`
 - `TG-prox-connect-url.cmd` for printing the deep link
 - `TG-prox.ps1` for PowerShell usage
+- `INSTALLER-METADATA.json` describing install scope, shortcuts, and prerequisites
+- `TG-prox.iss` as a rendered Inno Setup script for the current package version
 - copied `app/` and `config/` runtime assets
 
-This is still a Node-based MVP package, not a standalone `.exe` yet.
+The installer metadata currently targets a per-user Windows install in `%LocalAppData%\\Programs\\TG-prox`. This is still a Node-based MVP package, not a standalone `.exe` yet.
 
 ## Test
 

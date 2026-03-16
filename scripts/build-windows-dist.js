@@ -9,6 +9,13 @@ const packageJsonPath = path.join(projectRoot, "package.json");
 
 async function main() {
   const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8"));
+  const installerMetadataTemplate = JSON.parse(
+    await fs.readFile(path.join(projectRoot, "packaging", "windows", "INSTALLER-METADATA.json"), "utf8")
+  );
+  const issTemplate = await fs.readFile(
+    path.join(projectRoot, "packaging", "windows", "TG-prox.iss"),
+    "utf8"
+  );
 
   await fs.rm(distRoot, { recursive: true, force: true });
   await fs.mkdir(distRoot, { recursive: true });
@@ -37,6 +44,27 @@ async function main() {
   await copyFile(
     path.join(projectRoot, "packaging", "windows", "README.txt"),
     path.join(distRoot, "README.txt")
+  );
+
+  const installerMetadata = {
+    ...installerMetadataTemplate,
+    version: packageJson.version,
+    builtAt: new Date().toISOString(),
+    artifacts: {
+      installerScript: "TG-prox.iss",
+      distributionRoot: "."
+    }
+  };
+
+  await fs.writeFile(
+    path.join(distRoot, "INSTALLER-METADATA.json"),
+    `${JSON.stringify(installerMetadata, null, 2)}\n`,
+    "utf8"
+  );
+  await fs.writeFile(
+    path.join(distRoot, "TG-prox.iss"),
+    renderInnoSetupTemplate(issTemplate, packageJson.version),
+    "utf8"
   );
 
   await fs.writeFile(
@@ -70,6 +98,10 @@ async function copyPath(relativePath, options = {}) {
 async function copyFile(sourcePath, targetPath) {
   await fs.mkdir(path.dirname(targetPath), { recursive: true });
   await fs.copyFile(sourcePath, targetPath);
+}
+
+function renderInnoSetupTemplate(template, version) {
+  return template.replaceAll("__APP_VERSION__", version);
 }
 
 await main();
