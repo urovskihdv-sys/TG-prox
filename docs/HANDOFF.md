@@ -37,8 +37,9 @@ Completed in this step:
 32. Updated the Windows `.exe` installer to register a per-user `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` entry for autostart after login.
 33. Switched the Windows post-install launch path to the hidden background launcher so the installer no longer depends on a visible console staying open.
 34. Updated Windows standalone metadata and README notes to describe the new persistent background behavior honestly.
+35. Fixed the macOS app-bundle launcher so `LaunchAgent` runs `serve` without accidentally prepending `connect` and re-triggering repeated Telegram proxy prompts.
 
 Next implementation slice:
-1. Validate the new Windows autostart path on the hosted runner artifact and confirm the installed app survives logout/login without a visible console.
-2. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.
-3. Add signing/notarization for macOS and code signing for Windows so installers open cleanly on end-user machines.
+1. Rebuild and validate the macOS `.pkg` after the launcher-argument fix so the install path triggers Telegram once but leaves background `serve` quiet afterward.
+2. Validate the new Windows autostart path on the hosted runner artifact and confirm the installed app survives logout/login without a visible console.
+3. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.

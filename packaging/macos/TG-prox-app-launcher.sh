@@ -11,4 +11,8 @@ if [[ ! -x "$NODE_BIN" ]]; then
   exit 1
 fi
 
-exec "$NODE_BIN" "$CLI_JS" connect "$@"
+if [[ "$#" -gt 0 ]]; then
+  exec "$NODE_BIN" "$CLI_JS" "$@"
+fi
+
+exec "$NODE_BIN" "$CLI_JS" connect
