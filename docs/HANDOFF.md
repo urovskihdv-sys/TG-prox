@@ -1,6 +1,6 @@
 # Handoff
 
-Status: iteration 6 installer file generation complete
+Status: iteration 7 honest release-packaging boundary complete
 
 Completed in this step:
 1. Chosen runtime: Node.js local-agent skeleton with Windows-first path layout.
@@ -18,10 +18,15 @@ Completed in this step:
 13. Added installer-facing Windows metadata and a rendered Inno Setup script alongside the existing launcher entrypoints.
 14. Aligned the rendered installer script with per-user install scope in `%LocalAppData%\\Programs\\TG-prox`.
 15. Added macOS beta packaging layout and a unified installer build path for Windows and macOS output files.
-16. Generated final installer artifacts in `dist/installers/` for Windows (`.ps1`) and macOS (`.command`).
-17. Verified `dist/macos/TG-prox` runtime `connect-url` from the packaged copy.
+16. Reclassified script installers as fallback/dev artifacts only, not release outputs.
+17. Added Windows standalone packaging scaffolding for a self-contained `.exe` path with bundled runtime expectations.
+18. Added macOS `.app -> .pkg` packaging scaffolding with explicit macOS-host requirements.
+19. Added a final installer build status flow that records blockers instead of overstating release readiness.
+20. Verified that `dist:installers` now writes blocker status on the current Linux host instead of fake release artifacts.
+21. Moved script installers to `dist/fallback-installers/` and marked them as fallback/dev-only.
+22. Removed overstated installer wording from dev payload metadata in `dist:windows` and `dist:macos`.
 
 Next implementation slice:
-1. Start narrowing what is still required for a standalone `.exe` packaging path.
-2. Decide whether the next transport slice stays direct-only or introduces a configurable upstream proxy target.
-3. Add installer-oriented assets that can brand the Windows and macOS packages beyond raw script launchers.
+1. Tighten the Windows standalone `.exe` path around a vendored runtime and Inno Setup runner.
+2. Keep `.pkg` generation explicitly blocked behind a macOS runner until `pkgbuild`/`productbuild` are available.
+3. Add branded installer assets once the final `.exe/.pkg` toolchains are available.

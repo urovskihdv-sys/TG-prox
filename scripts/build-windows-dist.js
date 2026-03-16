@@ -51,8 +51,9 @@ async function main() {
     version: packageJson.version,
     builtAt: new Date().toISOString(),
     artifacts: {
-      installerScript: "TG-prox.iss",
-      distributionRoot: "."
+      distributionRoot: ".",
+      devLauncher: "TG-prox.cmd",
+      releaseTarget: "dist:windows:exe"
     }
   };
 
@@ -74,6 +75,7 @@ async function main() {
         name: packageJson.name,
         version: packageJson.version,
         builtAt: new Date().toISOString(),
+        buildKind: "dev-node-runtime-required",
         entrypoints: {
           primary: "TG-prox.cmd",
           powershell: "TG-prox.ps1",

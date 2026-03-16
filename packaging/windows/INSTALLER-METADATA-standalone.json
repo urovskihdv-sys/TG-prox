@@ -1,0 +1,43 @@
+{
+  "appId": "TG-prox",
+  "displayName": "TG-prox",
+  "publisher": "TG-prox",
+  "installScope": "per-user",
+  "installDir": "%LocalAppData%\\Programs\\TG-prox",
+  "runtimeDataDir": "%APPDATA%\\TG-prox",
+  "runtimeBundle": {
+    "type": "embedded-node",
+    "requiredPath": "runtime/node/node.exe"
+  },
+  "primaryEntrypoint": "TG-prox.cmd",
+  "entrypoints": [
+    {
+      "id": "connect",
+      "file": "TG-prox.cmd",
+      "description": "Starts the local SOCKS5 agent and triggers the Telegram connect flow."
+    },
+    {
+      "id": "connect-url",
+      "file": "TG-prox-connect-url.cmd",
+      "description": "Prints the tg://socks deep link without opening Telegram."
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "TG-prox",
+      "target": "TG-prox.cmd"
+    },
+    {
+      "name": "TG-prox Connect URL",
+      "target": "TG-prox-connect-url.cmd"
+    }
+  ],
+  "prerequisites": [
+    "Telegram Desktop installed with tg:// protocol handler registered"
+  ],
+  "notes": [
+    "This packaging path is self-contained and does not require user-installed Node.js.",
+    "Control plane is HTTPS remote config only.",
+    "Data plane is direct outbound TCP in the current MVP."
+  ]
+}

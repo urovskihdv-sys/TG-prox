@@ -68,7 +68,7 @@ This keeps the MVP aligned with the current decision: control plane over HTTPS, 
 
 ## Windows packaging slice
 
-Build a Windows-ready folder layout with:
+Build the current Windows dev payload with:
 
 ```bash
 npm run dist:windows
@@ -83,28 +83,100 @@ This creates `dist/windows/TG-prox/` with:
 - `TG-prox.iss` as a rendered Inno Setup script for the current package version
 - copied `app/` and `config/` runtime assets
 
-The installer metadata currently targets a per-user Windows install in `%LocalAppData%\\Programs\\TG-prox`. This is still a Node-based MVP package, not a standalone `.exe` yet.
+This payload still requires Node.js on the user machine. It is not the release installer target.
 
-For the macOS beta payload layout:
+Build the current macOS dev payload with:
 
 ```bash
 npm run dist:macos
 ```
 
-## Installer outputs
+This payload also still requires Node.js on the user machine. It is not the release installer target.
 
-Build both final installer files with:
+## Release Targets
+
+The release targets are:
+
+- Windows: standalone installer `.exe`
+- macOS: installer `.pkg`
+
+The old script-installers remain fallback/dev artifacts only.
+
+Build fallback/dev installers with:
+
+```bash
+npm run dist:fallback-installers
+```
+
+This produces:
+
+- `dist/fallback-installers/TG-prox-windows-fallback-installer-<version>.ps1`
+- `dist/fallback-installers/TG-prox-macos-fallback-installer-<version>.command`
+
+These are not the product installers.
+
+## Final Installer Status
+
+Attempt the final release installer build with:
 
 ```bash
 npm run dist:installers
 ```
 
-This produces:
+This writes:
 
-- `dist/installers/TG-prox-windows-installer-<version>.ps1`
-- `dist/installers/TG-prox-macos-installer-<version>.command`
+- `dist/installers/BUILD-STATUS.json`
 
-These are installer scripts with embedded payloads. Windows is the primary target. macOS remains best-effort beta.
+If prerequisites are available, the intended final outputs are:
+
+- `dist/installers/TG-prox-windows-installer-<version>.exe`
+- `dist/installers/TG-prox-macos-installer-<version>.pkg`
+
+If prerequisites are missing, `BUILD-STATUS.json` records the blocker instead of pretending the release installers exist.
+
+## Standalone Packaging Paths
+
+Windows standalone payload path:
+
+```bash
+npm run dist:windows:standalone
+npm run dist:windows:exe
+```
+
+This path expects:
+
+- vendored Windows runtime at `vendor/runtime/windows-x64/node.exe` or `TGPROX_WINDOWS_NODE_RUNTIME_DIR`
+- Windows host/runner with Inno Setup `iscc`
+
+macOS app/pkg path:
+
+```bash
+npm run dist:macos:app
+npm run dist:macos:pkg
+```
+
+This path expects:
+
+- vendored macOS runtime at `vendor/runtime/macos-universal/bin/node` or `TGPROX_MACOS_NODE_RUNTIME_DIR`
+- macOS host/runner with `pkgbuild` and `productbuild`
+
+## What This Host Can Build
+
+On the current Linux host, the repo can build:
+
+- runnable dev payloads in `dist/windows/` and `dist/macos/`
+- fallback/dev script installers in `dist/fallback-installers/`
+- Windows standalone payload scaffolding if a vendored Windows Node runtime is provided
+
+The current Linux host cannot produce a final macOS `.pkg`.
+
+## What Requires Another Host
+
+- Windows `.exe` installer:
+  requires a Windows host/runner with Inno Setup `iscc` and a vendored Windows Node runtime for the standalone payload
+
+- macOS `.pkg` installer:
+  requires a macOS host/runner with `pkgbuild` and `productbuild`, plus a vendored macOS Node runtime for the `.app` bundle
 
 ## Test
 

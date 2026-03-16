@@ -43,8 +43,9 @@ async function main() {
     version: packageJson.version,
     builtAt: new Date().toISOString(),
     artifacts: {
-      installerScript: "TG-prox-macos-installer.command",
-      distributionRoot: "."
+      distributionRoot: ".",
+      devLauncher: "TG-prox.command",
+      releaseTarget: "dist:macos:pkg"
     }
   };
 
@@ -64,6 +65,7 @@ async function main() {
         name: packageJson.name,
         version: packageJson.version,
         builtAt: new Date().toISOString(),
+        buildKind: "dev-node-runtime-required",
         entrypoints: {
           primary: "TG-prox.command",
           connectURL: "TG-prox-connect-url.command"
