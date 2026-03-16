@@ -13,7 +13,12 @@
   },
   "transport": {
     "mode": "direct",
-    "connectTimeoutMs": 10000
+    "connectTimeoutMs": 10000,
+    "relay": {
+      "serverURL": "https://relay.example.com:8443",
+      "authToken": "replace-me",
+      "caCertPath": null
+    }
   },
   "controlPlane": {
     "refreshIntervalMs": 300000

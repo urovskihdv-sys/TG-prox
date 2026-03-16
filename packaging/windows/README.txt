@@ -11,7 +11,7 @@ Requirements:
 
 Notes:
 - The control plane is HTTPS remote config only.
-- Data-plane is direct outbound TCP in this MVP slice.
+- Data-plane can run either direct or through the HTTPS relay transport, depending on config.
 - Runtime data defaults to %APPDATA%\TG-prox on Windows.
 - INSTALLER-METADATA.json describes install scope, entrypoints, shortcuts, and prerequisites.
 - TG-prox.iss is an Inno Setup script template rendered for the current package version.

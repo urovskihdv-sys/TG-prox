@@ -13,3 +13,8 @@ Phase 2
 
 Phase 3
 - macOS beta packaging
+
+Phase 4
+- HTTPS CONNECT relay transport through our server
+- Minimal relay server process with token auth
+- End-to-end bypass validation through external server

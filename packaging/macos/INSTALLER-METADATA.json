@@ -28,7 +28,7 @@
   "notes": [
     "The pkg installs TG-prox.app and a launchd LaunchAgent for background autostart.",
     "The installer attempts one immediate app launch so Telegram can pick up the local proxy without Terminal.",
-    "Data plane is direct outbound TCP in the current MVP.",
+    "Data plane can run either direct or through the HTTPS relay transport, depending on config.",
     "macOS remains best-effort beta."
   ]
 }

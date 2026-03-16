@@ -8,6 +8,7 @@
     "start": "node app/cli.js",
     "connect": "node app/cli.js connect",
     "connect-url": "node app/cli.js connect-url",
+    "relay:server": "node server/relay-server.js",
     "dist:macos": "node scripts/build-macos-dist.js",
     "dist:macos:app": "node scripts/build-macos-app-dist.js",
     "dist:macos:pkg": "node scripts/build-macos-pkg.js",
@@ -16,7 +17,7 @@
     "dist:windows:standalone": "node scripts/build-windows-standalone-dist.js",
     "dist:windows:exe": "node scripts/build-windows-exe-installer.js",
     "dist:installers": "node scripts/build-installers.js",
-    "test": "node --test app/model.test.js app/remote-config.test.js app/runtime.test.js app/socks5-server.test.js app/telegram-connect.test.js"
+    "test": "node --test app/model.test.js app/remote-config.test.js app/runtime.test.js app/socks5-server.test.js app/telegram-connect.test.js server/relay-server.test.js"
   },
   "engines": {
     "node": ">=18"

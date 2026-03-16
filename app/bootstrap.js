@@ -1,9 +1,11 @@
 import fs from "node:fs/promises";
 import { buildAppConfig } from "./config.js";
 import { createLogger } from "./logger.js";
+import { applyRuntimeConfigOverrides } from "./model.js";
 import { createRemoteConfigLoader } from "./remote-config.js";
 import { createLocalSocks5Server } from "./socks5-server.js";
 import { createDirectTransport } from "./transport/direct.js";
+import { createRelayTransport } from "./transport/relay.js";
 
 export async function runApp({
   env = process.env,
@@ -37,22 +39,33 @@ export async function runApp({
   });
 
   const resolvedConfig = await loader.load();
+  const effectiveConfig = applyRuntimeConfigOverrides(
+    resolvedConfig.config,
+    appConfig.runtimeOverrides
+  );
 
   logger.info("Configuration resolved", {
     source: resolvedConfig.source,
-    version: resolvedConfig.config.version,
-    proxyEndpoint: `${resolvedConfig.config.proxy.listenHost}:${resolvedConfig.config.proxy.listenPort}`,
-    telegramEndpoint: `${resolvedConfig.config.telegram.socksHost}:${resolvedConfig.config.telegram.socksPort}`
+    version: effectiveConfig.version,
+    proxyEndpoint: `${effectiveConfig.proxy.listenHost}:${effectiveConfig.proxy.listenPort}`,
+    telegramEndpoint: `${effectiveConfig.telegram.socksHost}:${effectiveConfig.telegram.socksPort}`,
+    transportMode: effectiveConfig.transport.mode
   });
 
   let socksServer = null;
   if (startServer) {
-    const transport = createDirectTransport({ logger });
+    const transport =
+      effectiveConfig.transport.mode === "relay"
+        ? await createRelayTransport({
+            logger,
+            relayConfig: effectiveConfig.transport.relay
+          })
+        : createDirectTransport({ logger });
     socksServer = createLocalSocks5Server({
-      listenHost: resolvedConfig.config.proxy.listenHost,
-      listenPort: resolvedConfig.config.proxy.listenPort,
-      handshakeTimeoutMs: resolvedConfig.config.proxy.handshakeTimeoutMs,
-      connectTimeoutMs: resolvedConfig.config.transport.connectTimeoutMs,
+      listenHost: effectiveConfig.proxy.listenHost,
+      listenPort: effectiveConfig.proxy.listenPort,
+      handshakeTimeoutMs: effectiveConfig.proxy.handshakeTimeoutMs,
+      connectTimeoutMs: effectiveConfig.transport.connectTimeoutMs,
       logger,
       transport
     });
@@ -63,7 +76,10 @@ export async function runApp({
   return {
     appConfig,
     logger,
-    remoteConfig: resolvedConfig,
+    remoteConfig: {
+      ...resolvedConfig,
+      config: effectiveConfig
+    },
     socksServer,
     async stop() {
       if (socksServer) {

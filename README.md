@@ -11,10 +11,14 @@ The repository now contains a runnable local-agent bootstrap focused on the cont
 - cache fallback on fetch failure
 - bundled default fallback when cache is missing
 - file + stderr logging without payload logging
-- local SOCKS5 adapter with `CONNECT` support and direct outbound transport
+- local SOCKS5 adapter with `CONNECT` support and pluggable transport boundary
+- optional HTTPS CONNECT relay transport through our server
 - macOS `.pkg` background install path via `LaunchAgent`
 
-This is intentionally a vertical slice for the MVP foundation. No relay/data-plane is routed through our server in this phase.
+This is intentionally a vertical slice with two transport paths:
+
+- `direct`: local TG-prox opens TCP to Telegram directly
+- `relay`: local TG-prox tunnels TCP through our HTTPS relay server
 
 ## Runtime
 
@@ -47,6 +51,10 @@ Optional environment variables:
 - `TGPROX_REMOTE_CONFIG_TIMEOUT_MS=5000`
 - `TGPROX_HOME=/custom/runtime/dir`
 - `TGPROX_DEFAULT_CONFIG_PATH=/custom/default.remote-config.json`
+- `TGPROX_TRANSPORT_MODE=relay`
+- `TGPROX_RELAY_URL=https://relay.example.com:8443`
+- `TGPROX_RELAY_AUTH_TOKEN=replace-me`
+- `TGPROX_RELAY_CA_CERT_PATH=/path/to/relay-ca.pem`
 
 Without `TGPROX_REMOTE_CONFIG_URL`, the app skips the remote fetch and uses `cache -> default` fallback locally.
 
@@ -56,9 +64,46 @@ Without `TGPROX_REMOTE_CONFIG_URL`, the app skips the remote fetch and uses `cac
 - authentication: `NO AUTH`
 - command support: `CONNECT`
 - address support: IPv4, domain name, IPv6
-- transport mode: direct outbound TCP only
+- transport modes:
+  - `direct`: direct outbound TCP
+  - `relay`: HTTPS CONNECT tunnel through our relay server
 
-This keeps the MVP aligned with the current decision: control plane over HTTPS, no relay/data-plane through our server.
+For real provider-block bypass, `relay` is now the intended path.
+
+## Relay Server
+
+Start the relay server with:
+
+```bash
+TGPROX_RELAY_TLS_KEY_PATH=/path/to/privkey.pem \
+TGPROX_RELAY_TLS_CERT_PATH=/path/to/fullchain.pem \
+TGPROX_RELAY_SHARED_TOKEN=replace-me \
+npm run relay:server
+```
+
+Optional relay server environment variables:
+
+- `TGPROX_RELAY_LISTEN_HOST=0.0.0.0`
+- `TGPROX_RELAY_LISTEN_PORT=8443`
+- `TGPROX_RELAY_CONNECT_TIMEOUT_MS=10000`
+- `TGPROX_RELAY_LOG_FILE=/var/log/tg-prox-relay.log`
+
+Client-side relay mode:
+
+```bash
+TGPROX_TRANSPORT_MODE=relay \
+TGPROX_RELAY_URL=https://relay.example.com:8443 \
+TGPROX_RELAY_AUTH_TOKEN=replace-me \
+npm run connect
+```
+
+If the relay server uses a private or self-signed CA, also set:
+
+```bash
+TGPROX_RELAY_CA_CERT_PATH=/path/to/relay-ca.pem
+```
+
+The relay server exposes `GET /healthz` over HTTPS for a simple readiness check.
 
 ## Telegram connect flow
 

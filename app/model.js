@@ -14,6 +14,20 @@ export function normalizeRemoteConfig(rawConfig) {
 
   const proxyHost = normalizeNonEmptyString(rawConfig.proxy?.listenHost, "127.0.0.1");
   const proxyPort = normalizePort(rawConfig.proxy?.listenPort, 9150, "proxy.listenPort");
+  const transportMode = normalizeTransportMode(rawConfig.transport?.mode);
+  const relayServerURL = normalizeRelayServerURL(rawConfig.transport?.relay?.serverURL);
+  const relayAuthToken = normalizeOptionalSecret(rawConfig.transport?.relay?.authToken);
+  const relayCACertPath = normalizeOptionalString(rawConfig.transport?.relay?.caCertPath);
+
+  if (transportMode === "relay") {
+    if (!relayServerURL) {
+      throw new ConfigValidationError("transport.relay.serverURL is required when transport.mode is 'relay'");
+    }
+
+    if (!relayAuthToken) {
+      throw new ConfigValidationError("transport.relay.authToken is required when transport.mode is 'relay'");
+    }
+  }
 
   return {
     schemaVersion: normalizePositiveInteger(rawConfig.schemaVersion, 1, "schemaVersion"),
@@ -33,12 +47,17 @@ export function normalizeRemoteConfig(rawConfig) {
       socksPort: normalizePort(rawConfig.telegram?.socksPort, proxyPort, "telegram.socksPort")
     },
     transport: {
-      mode: normalizeTransportMode(rawConfig.transport?.mode),
+      mode: transportMode,
       connectTimeoutMs: normalizePositiveInteger(
         rawConfig.transport?.connectTimeoutMs,
         10000,
         "transport.connectTimeoutMs"
-      )
+      ),
+      relay: {
+        serverURL: relayServerURL,
+        authToken: relayAuthToken,
+        caCertPath: relayCACertPath
+      }
     },
     controlPlane: {
       refreshIntervalMs: normalizePositiveInteger(
@@ -69,12 +88,58 @@ export function normalizeRemoteConfigURL(rawURL) {
   return parsedURL;
 }
 
+export function resolveRuntimeConfigOverrides(env = process.env) {
+  return {
+    transportMode: normalizeOptionalString(env.TGPROX_TRANSPORT_MODE),
+    relayServerURL: normalizeRelayServerURL(env.TGPROX_RELAY_URL || ""),
+    relayAuthToken: normalizeOptionalSecret(env.TGPROX_RELAY_AUTH_TOKEN),
+    relayCACertPath: normalizeOptionalString(env.TGPROX_RELAY_CA_CERT_PATH)
+  };
+}
+
+export function applyRuntimeConfigOverrides(baseConfig, overrides) {
+  if (!overrides) {
+    return baseConfig;
+  }
+
+  const merged = structuredClone(baseConfig);
+  merged.transport ||= {};
+  merged.transport.relay ||= {};
+
+  if (overrides.transportMode) {
+    merged.transport.mode = overrides.transportMode;
+  }
+
+  if (overrides.relayServerURL) {
+    merged.transport.relay.serverURL = overrides.relayServerURL;
+  }
+
+  if (overrides.relayAuthToken) {
+    merged.transport.relay.authToken = overrides.relayAuthToken;
+  }
+
+  if (overrides.relayCACertPath) {
+    merged.transport.relay.caCertPath = overrides.relayCACertPath;
+  }
+
+  return normalizeRemoteConfig(merged);
+}
+
 function normalizeNonEmptyString(value, fallback) {
   if (typeof value === "string" && value.trim().length > 0) {
     return value.trim();
   }
 
   return fallback;
+}
+
+function normalizeOptionalString(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function normalizePositiveInteger(value, fallback, fieldName) {
@@ -128,9 +193,33 @@ function normalizeTransportMode(value) {
     return "direct";
   }
 
-  if (value !== "direct") {
-    throw new ConfigValidationError("transport.mode must be 'direct'");
+  if (value !== "direct" && value !== "relay") {
+    throw new ConfigValidationError("transport.mode must be 'direct' or 'relay'");
   }
 
   return value;
+}
+
+function normalizeRelayServerURL(value) {
+  const normalized = normalizeOptionalString(value);
+  if (!normalized) {
+    return null;
+  }
+
+  let parsedURL;
+  try {
+    parsedURL = new URL(normalized);
+  } catch (error) {
+    throw new ConfigValidationError(`invalid relay server URL: ${error.message}`);
+  }
+
+  if (parsedURL.protocol !== "https:") {
+    throw new ConfigValidationError("relay server URL must use HTTPS");
+  }
+
+  return parsedURL.origin;
+}
+
+function normalizeOptionalSecret(value) {
+  return normalizeOptionalString(value);
 }

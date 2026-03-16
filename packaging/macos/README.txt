@@ -9,7 +9,7 @@ Requirements:
 
 Notes:
 - The control plane is HTTPS remote config only.
-- Data-plane is direct outbound TCP in this MVP slice.
+- Data-plane can run either direct or through the HTTPS relay transport, depending on config.
 - Runtime data defaults to ~/Library/Application Support/TG-prox on macOS.
 - The pkg should leave TG-prox running through launchd after install and after login.
 - The installer also attempts one immediate app launch so Telegram can register the local proxy without Terminal.

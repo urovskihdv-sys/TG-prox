@@ -1,6 +1,6 @@
 # Handoff
 
-Status: iteration 9 windows background install path complete
+Status: iteration 10 relay transport and relay server slice complete
 
 Completed in this step:
 1. Chosen runtime: Node.js local-agent skeleton with Windows-first path layout.
@@ -38,8 +38,14 @@ Completed in this step:
 33. Switched the Windows post-install launch path to the hidden background launcher so the installer no longer depends on a visible console staying open.
 34. Updated Windows standalone metadata and README notes to describe the new persistent background behavior honestly.
 35. Fixed the macOS app-bundle launcher so `LaunchAgent` runs `serve` without accidentally prepending `connect` and re-triggering repeated Telegram proxy prompts.
+36. Changed the project decision boundary: data-plane can now go through our server instead of only direct local egress.
+37. Added `transport.mode = relay` config support with validated relay server URL, auth token, and optional custom CA path.
+38. Added runtime env overrides so packaged or local agents can be switched to relay mode without editing code.
+39. Added an HTTPS CONNECT relay transport on the agent side with TLS validation kept enabled.
+40. Added a minimal HTTPS relay server process with bearer-token auth and `GET /healthz`.
+41. Verified relay mode end-to-end with tests covering `client -> relay server -> target` and unauthorized rejection.
 
 Next implementation slice:
-1. Rebuild and validate the macOS `.pkg` after the launcher-argument fix so the install path triggers Telegram once but leaves background `serve` quiet afterward.
-2. Validate the new Windows autostart path on the hosted runner artifact and confirm the installed app survives logout/login without a visible console.
+1. Add a practical relay deployment path for the real server host: systemd/unit file, reverse-proxy/TLS notes, and one known-good runtime recipe.
+2. Validate packaged Windows/macOS apps in relay mode against the real server and confirm they keep working without repeated Telegram prompts.
 3. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.

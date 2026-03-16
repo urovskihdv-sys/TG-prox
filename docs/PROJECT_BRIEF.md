@@ -7,4 +7,4 @@ Current architecture decision:
 - Separate project in /opt/TG-prox
 - Windows first
 - Server used as control plane (remote config over HTTPS)
-- No relay/data-plane through our server in MVP unless explicitly changed later
+- Relay/data-plane through our server is now enabled as the next implementation path for real Telegram bypass

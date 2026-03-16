@@ -1,4 +1,4 @@
-import { normalizeRemoteConfigURL } from "./model.js";
+import { normalizeRemoteConfigURL, resolveRuntimeConfigOverrides } from "./model.js";
 import { resolveRuntimePaths } from "./runtime-paths.js";
 
 export function buildAppConfig(env = process.env) {
@@ -9,6 +9,7 @@ export function buildAppConfig(env = process.env) {
     appName: "TG-prox",
     env: env.TGPROX_ENV || "development",
     paths,
+    runtimeOverrides: resolveRuntimeConfigOverrides(env),
     controlPlane: {
       remoteConfigURL,
       timeoutMs: parseTimeout(env.TGPROX_REMOTE_CONFIG_TIMEOUT_MS)

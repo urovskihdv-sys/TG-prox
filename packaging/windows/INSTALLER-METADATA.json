@@ -39,6 +39,6 @@
   ],
   "notes": [
     "Control plane is HTTPS remote config only.",
-    "Data plane is direct outbound TCP in the current MVP."
+    "Data plane can run either direct or through the HTTPS relay transport, depending on config."
   ]
 }
