@@ -53,8 +53,10 @@ Completed in this step:
 48. Found and fixed a relay stability bug where outbound timeouts could crash the whole relay process with an unhandled socket error.
 49. Updated the local SOCKS5 adapter to return proper SOCKS failure replies on outbound connect errors instead of silently resetting the client socket.
 50. Reduced the relay outbound connect timeout to 4s so failed Telegram probe connections do not stall the user path for 10s.
+51. Disabled generic HTTP server keep-alive/request timeouts on the relay service so CONNECT tunnels are not reaped by HTTP-layer idle policies.
+52. Enabled tighter TCP keepalive on local SOCKS, relay client sockets, and relay server sockets to detect broken long-lived sessions sooner.
 
 Next implementation slice:
 1. Rebuild Windows/macOS installers once more so both platforms pick up the packaged bootstrap URL, then validate them against the live relay without manual env overrides.
-2. Validate the new relay stability fix against the live Mac install and confirm message send/receive no longer stalls intermittently.
+2. Validate the new long-lived relay session fix against the live Mac install and confirm Telegram no longer stalls after idle time.
 3. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.

@@ -76,7 +76,10 @@ function connectThroughRelay({
         return;
       }
 
+      request.setTimeout(0);
       socket.setTimeout(0);
+      socket.setNoDelay(true);
+      socket.setKeepAlive(true, 15000);
       if (head?.length) {
         socket.unshift(head);
       }

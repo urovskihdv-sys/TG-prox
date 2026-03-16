@@ -62,6 +62,7 @@ export function createLocalSocks5Server({
 async function handleClient({ clientSocket, handshakeTimeoutMs, connectTimeoutMs, logger, transport }) {
   const requestId = crypto.randomUUID();
   clientSocket.setNoDelay(true);
+  clientSocket.setKeepAlive(true, 15000);
   clientSocket.setTimeout(handshakeTimeoutMs);
   let wroteReply = false;
 
@@ -115,6 +116,7 @@ async function handleClient({ clientSocket, handshakeTimeoutMs, connectTimeoutMs
     }
 
     outboundSocket.setNoDelay(true);
+    outboundSocket.setKeepAlive(true, 15000);
     clientSocket.setTimeout(0);
 
     logger.info("SOCKS5 outbound connected", {

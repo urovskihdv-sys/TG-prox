@@ -47,6 +47,9 @@ export async function createRelayServer({
     response.writeHead(404, { "content-type": "application/json" });
     response.end('{"error":"not_found"}');
   });
+  server.keepAliveTimeout = 0;
+  server.requestTimeout = 0;
+  server.timeout = 0;
 
   server.on("connect", (request, clientSocket, head) => {
     trackSocket(activeSockets, clientSocket);
@@ -141,10 +144,10 @@ async function handleTunnel({
   }
 
   clientSocket.setNoDelay(true);
-  clientSocket.setKeepAlive(true, 30000);
+  clientSocket.setKeepAlive(true, 15000);
   trackSocket(activeSockets, outboundSocket);
   outboundSocket.setNoDelay(true);
-  outboundSocket.setKeepAlive(true, 30000);
+  outboundSocket.setKeepAlive(true, 15000);
 
   logger.info("Relay outbound connected", {
     requestId,
