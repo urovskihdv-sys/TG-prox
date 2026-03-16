@@ -21,9 +21,12 @@ UninstallDisplayIcon={app}\TG-prox.cmd
 Source: "*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\TG-prox"; Filename: "{cmd}"; Parameters: "/c ""{app}\TG-prox.cmd"""
+Name: "{group}\TG-prox"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\TG-prox-background.vbs"" connect"
 Name: "{group}\TG-prox Connect URL"; Filename: "{cmd}"; Parameters: "/c ""{app}\TG-prox-connect-url.cmd"""
 Name: "{group}\Uninstall TG-prox"; Filename: "{uninstallexe}"
 
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "TG-prox"; ValueData: """{sys}\wscript.exe"" ""{app}\TG-prox-background.vbs"" serve"; Flags: uninsdeletevalue
+
 [Run]
-Filename: "{cmd}"; Parameters: "/c ""{app}\TG-prox.cmd"""; Description: "Launch TG-prox"; Flags: postinstall skipifsilent unchecked
+Filename: "{sys}\wscript.exe"; Parameters: """{app}\TG-prox-background.vbs"" connect"; Description: "Launch TG-prox"; Flags: postinstall skipifsilent unchecked

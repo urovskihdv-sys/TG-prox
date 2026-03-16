@@ -9,23 +9,41 @@
     "type": "embedded-node",
     "requiredPath": "runtime/node/node.exe"
   },
-  "primaryEntrypoint": "TG-prox.cmd",
+  "primaryEntrypoint": "TG-prox-background.vbs",
+  "backgroundAgent": {
+    "mode": "windows-run-key",
+    "scope": "HKCU",
+    "registryPath": "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+    "valueName": "TG-prox",
+    "command": "wscript.exe \"TG-prox-background.vbs\" serve"
+  },
   "entrypoints": [
     {
       "id": "connect",
+      "file": "TG-prox-background.vbs",
+      "description": "Starts or reuses the local SOCKS5 agent in background and triggers the Telegram connect flow."
+    },
+    {
+      "id": "connect-cli",
       "file": "TG-prox.cmd",
-      "description": "Starts the local SOCKS5 agent and triggers the Telegram connect flow."
+      "description": "Visible CLI fallback for manual connect runs and debugging."
     },
     {
       "id": "connect-url",
       "file": "TG-prox-connect-url.cmd",
       "description": "Prints the tg://socks deep link without opening Telegram."
+    },
+    {
+      "id": "background-serve",
+      "file": "TG-prox-background.vbs",
+      "description": "Hidden background launcher used by Windows autostart to keep the local SOCKS5 agent alive."
     }
   ],
   "shortcuts": [
     {
       "name": "TG-prox",
-      "target": "TG-prox.cmd"
+      "target": "wscript.exe",
+      "arguments": "\"TG-prox-background.vbs\" connect"
     },
     {
       "name": "TG-prox Connect URL",
@@ -37,6 +55,8 @@
   ],
   "notes": [
     "This packaging path is self-contained and does not require user-installed Node.js.",
+    "The installer registers a per-user Windows Run entry so TG-prox starts again after login.",
+    "The post-install launch runs in background and should leave the local SOCKS5 agent active without a visible console window.",
     "Control plane is HTTPS remote config only.",
     "Data plane is direct outbound TCP in the current MVP."
   ]

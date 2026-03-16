@@ -57,6 +57,10 @@ export async function buildWindowsStandaloneDist() {
     path.join(standaloneRoot, "TG-prox-connect-url.cmd")
   );
   await copyProjectFile(
+    "packaging/windows/TG-prox-background.vbs",
+    path.join(standaloneRoot, "TG-prox-background.vbs")
+  );
+  await copyProjectFile(
     "packaging/windows/README-standalone.txt",
     path.join(standaloneRoot, "README.txt")
   );

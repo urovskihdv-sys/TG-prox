@@ -1,6 +1,6 @@
 # Handoff
 
-Status: iteration 8 macOS background install path complete
+Status: iteration 9 windows background install path complete
 
 Completed in this step:
 1. Chosen runtime: Node.js local-agent skeleton with Windows-first path layout.
@@ -33,8 +33,12 @@ Completed in this step:
 28. Updated macOS postinstall to bootstrap the LaunchAgent immediately and trigger one app launch for Telegram proxy registration without Terminal.
 29. Updated `connect` mode to reuse an already-running local SOCKS5 listener and exit cleanly instead of leaving an extra hanging process.
 30. Added runtime reachability tests for the listener probe used by the connect-flow reuse path.
+31. Added a hidden Windows background launcher based on `wscript.exe` for the standalone installer payload.
+32. Updated the Windows `.exe` installer to register a per-user `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` entry for autostart after login.
+33. Switched the Windows post-install launch path to the hidden background launcher so the installer no longer depends on a visible console staying open.
+34. Updated Windows standalone metadata and README notes to describe the new persistent background behavior honestly.
 
 Next implementation slice:
-1. Add Windows post-install background/autostart so the `.exe` installer reaches the same “install once, no Terminal/manual keepalive” bar.
+1. Validate the new Windows autostart path on the hosted runner artifact and confirm the installed app survives logout/login without a visible console.
 2. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.
 3. Add signing/notarization for macOS and code signing for Windows so installers open cleanly on end-user machines.

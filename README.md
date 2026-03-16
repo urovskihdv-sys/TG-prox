@@ -149,6 +149,20 @@ If the repo is on GitHub, the lowest-manual-work path is:
 
 The workflow file is [release-installers.yml](/opt/TG-prox/.github/workflows/release-installers.yml). It uses GitHub-hosted Windows and macOS runners, runs tests first, prepares the bundled Node runtime on the runner, then builds the release installers.
 
+## Windows installer behavior
+
+The Windows release installer is now intended to install once and keep working without a manual terminal session. The `.exe` path now:
+
+- bundles its own Node runtime
+- registers a per-user `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` entry
+- starts TG-prox in background through `wscript.exe` after install
+- keeps the local SOCKS5 listener coming back after login
+
+Current limits:
+
+- the post-install connect flow still depends on Telegram Desktop being installed and registered for `tg://`
+- Windows code signing is still a follow-up, so SmartScreen reputation warnings are still possible
+
 ## macOS package behavior
 
 The macOS release package now installs:
