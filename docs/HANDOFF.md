@@ -44,8 +44,10 @@ Completed in this step:
 39. Added an HTTPS CONNECT relay transport on the agent side with TLS validation kept enabled.
 40. Added a minimal HTTPS relay server process with bearer-token auth and `GET /healthz`.
 41. Verified relay mode end-to-end with tests covering `client -> relay server -> target` and unauthorized rejection.
+42. Added deploy assets for a known-good real-server path on this host: `systemd` unit plus env-file template for `relay.unitops.pro:8443`.
+43. Deployed the relay live on this host at `https://relay.unitops.pro:8443`, issued a Let's Encrypt certificate, opened `8443/tcp`, and verified `/healthz`.
 
 Next implementation slice:
-1. Add a practical relay deployment path for the real server host: systemd/unit file, reverse-proxy/TLS notes, and one known-good runtime recipe.
+1. Switch the desktop client path to the live relay endpoint and validate Telegram through the real server.
 2. Validate packaged Windows/macOS apps in relay mode against the real server and confirm they keep working without repeated Telegram prompts.
 3. Add installer-visible health/status hooks for the background agent instead of relying on logs for diagnosis.

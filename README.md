@@ -105,6 +105,20 @@ TGPROX_RELAY_CA_CERT_PATH=/path/to/relay-ca.pem
 
 The relay server exposes `GET /healthz` over HTTPS for a simple readiness check.
 
+## Real Server Recipe
+
+Known-good pragmatic server recipe on this host:
+
+- public endpoint: `https://relay.unitops.pro:8443`
+- process manager: `systemd`
+- certificate source: Let's Encrypt
+- relay daemon entrypoint: `server/relay-server.js`
+
+Repo assets for this path:
+
+- [tg-prox-relay.service](/opt/TG-prox/deploy/systemd/tg-prox-relay.service)
+- [tg-prox-relay.env.example](/opt/TG-prox/deploy/systemd/tg-prox-relay.env.example)
+
 ## Telegram connect flow
 
 - `connect-url` resolves the active config and prints a `tg://socks?...` deep link.
