@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "version": "default",
+  "updatedAt": "1970-01-01T00:00:00.000Z",
+  "proxy": {
+    "listenHost": "127.0.0.1",
+    "listenPort": 9150
+  },
+  "telegram": {
+    "socksHost": "127.0.0.1",
+    "socksPort": 9150
+  },
+  "controlPlane": {
+    "refreshIntervalMs": 300000
+  }
+}

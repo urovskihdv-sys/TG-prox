@@ -1,0 +1,14 @@
+{
+  "name": "tg-prox",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Windows-first MVP bootstrap for a local Telegram proxy agent.",
+  "scripts": {
+    "start": "node app/cli.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
