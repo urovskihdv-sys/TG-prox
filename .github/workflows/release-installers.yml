@@ -1,0 +1,114 @@
+name: Build Release Installers
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Run tests
+        run: npm test
+
+  build-windows-exe:
+    name: Build Windows .exe
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (Get-Command choco -ErrorAction SilentlyContinue) {
+            choco install innosetup --yes --no-progress
+          } elseif (Get-Command winget -ErrorAction SilentlyContinue) {
+            winget install --exact --id JRSoftware.InnoSetup --silent --accept-package-agreements --accept-source-agreements
+          } else {
+            throw "Neither Chocolatey nor winget is available to install Inno Setup."
+          }
+
+          $isccCandidates = @(
+            (Get-Command iscc -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue),
+            (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"),
+            (Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe")
+          ) | Where-Object { $_ -and (Test-Path $_) }
+
+          if (-not $isccCandidates) {
+            throw "Inno Setup installed, but ISCC.exe was not found."
+          }
+
+          "TGPROX_ISCC_PATH=$($isccCandidates[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Prepare bundled Node runtime
+        shell: pwsh
+        run: |
+          $nodeExe = (Get-Command node).Source
+          $nodeRoot = Split-Path $nodeExe -Parent
+          $runtimeRoot = Join-Path $env:RUNNER_TEMP "tgprox-windows-node"
+          New-Item -ItemType Directory -Force -Path $runtimeRoot | Out-Null
+          Copy-Item -Path (Join-Path $nodeRoot "*") -Destination $runtimeRoot -Recurse -Force
+          "TGPROX_WINDOWS_NODE_RUNTIME_DIR=$runtimeRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: npm run dist:windows:exe
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: tg-prox-windows-installer
+          path: dist/windows-standalone/TG-prox/*.exe
+          if-no-files-found: error
+
+  build-macos-pkg:
+    name: Build macOS .pkg
+    runs-on: macos-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Prepare bundled Node runtime
+        shell: bash
+        run: |
+          NODE_BIN="$(which node)"
+          NODE_ROOT="$(cd "$(dirname "$NODE_BIN")/.." && pwd)"
+          echo "TGPROX_MACOS_NODE_RUNTIME_DIR=$NODE_ROOT" >> "$GITHUB_ENV"
+
+      - name: Build macOS installer
+        shell: bash
+        run: npm run dist:macos:pkg
+
+      - name: Upload macOS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: tg-prox-macos-installer
+          path: dist/installers/*.pkg
+          if-no-files-found: error

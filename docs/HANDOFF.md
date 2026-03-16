@@ -25,8 +25,9 @@ Completed in this step:
 20. Verified that `dist:installers` now writes blocker status on the current Linux host instead of fake release artifacts.
 21. Moved script installers to `dist/fallback-installers/` and marked them as fallback/dev-only.
 22. Removed overstated installer wording from dev payload metadata in `dist:windows` and `dist:macos`.
+23. Added a GitHub Actions workflow that can build Windows `.exe` and macOS `.pkg` on hosted runners with minimal manual setup.
 
 Next implementation slice:
-1. Tighten the Windows standalone `.exe` path around a vendored runtime and Inno Setup runner.
-2. Keep `.pkg` generation explicitly blocked behind a macOS runner until `pkgbuild`/`productbuild` are available.
-3. Add branded installer assets once the final `.exe/.pkg` toolchains are available.
+1. Validate the hosted-runner workflow on the real GitHub repository and confirm `.exe` / `.pkg` artifacts download cleanly.
+2. Tighten the Windows standalone `.exe` path if Inno Setup installation on hosted runners needs adjustment.
+3. Add branded installer assets once the final `.exe/.pkg` workflow is confirmed stable.

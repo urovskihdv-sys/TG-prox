@@ -134,6 +134,20 @@ If prerequisites are available, the intended final outputs are:
 
 If prerequisites are missing, `BUILD-STATUS.json` records the blocker instead of pretending the release installers exist.
 
+## Fastest Path: GitHub Actions
+
+If the repo is on GitHub, the lowest-manual-work path is:
+
+1. Push this repository to GitHub.
+2. Open `Actions`.
+3. Run `Build Release Installers`.
+4. Wait for the Windows and macOS jobs to finish.
+5. Download artifacts:
+   - `tg-prox-windows-installer`
+   - `tg-prox-macos-installer`
+
+The workflow file is [release-installers.yml](/opt/TG-prox/.github/workflows/release-installers.yml). It uses GitHub-hosted Windows and macOS runners, runs tests first, prepares the bundled Node runtime on the runner, then builds the release installers.
+
 ## Standalone Packaging Paths
 
 Windows standalone payload path:

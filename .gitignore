@@ -3,4 +3,5 @@ coverage/
 .tg-prox/
 runtime/
 dist/
+vendor/runtime/
 *.log
